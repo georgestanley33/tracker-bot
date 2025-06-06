@@ -3,8 +3,6 @@ from discord.ext import commands
 import re
 import json
 import os
-from flask import Flask
-from threading import Thread
 
 # === CONFIG ===
 TOKEN = os.environ["TOKEN"]
@@ -265,6 +263,5 @@ async def on_message(message):
             await message.delete()
 
     await bot.process_commands(message)
-
 
 bot.run(TOKEN)
