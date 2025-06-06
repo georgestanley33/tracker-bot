@@ -8,9 +8,9 @@ import os
 TOKEN = os.environ["TOKEN"]
 TICKET_CHANNEL_ID = 1380229712290385920
 STATS_CHANNEL_ID = 1380285540804329695
-PAYOUT_CHANNEL_ID = 1380299306568777812  # <-- Replace with your payout logs channel ID
+PAYOUT_CHANNEL_ID = 123456789012345678  # <-- Replace with your payout logs channel ID
 STATS_FILE = "stats.json"
-OWNER_ID = 866298421866397716  # <-- Replace with your Discord user ID
+OWNER_ID = 123456789012345678  # <-- Replace with your Discord user ID
 
 # === BOT SETUP ===
 intents = discord.Intents.default()
@@ -55,7 +55,7 @@ def save_stats():
             "total_gems_paid": total_gems_paid
         }, f)
 
-# === BUTTONS ===
+# === BUTTONS & VIEWS ===
 class ResetStatsButton(discord.ui.Button):
     def __init__(self):
         super().__init__(label="🗑️ Reset Stats", style=discord.ButtonStyle.danger, custom_id="reset_stats")
@@ -101,7 +101,7 @@ def build_welcome_message(ids):
     mention_line = ' '.join(f'<@{uid}>' for uid in ids)
     return f"""{mention_line}
 
-I'm george and I'm going to be your Nexus manager. For the next 24 hours or so, this ticket is going to be open and it's gonna be your personal helpline. Feel free to ask any questions, queries, or anything else you may want to ask while you are new to the city!"""
+I'm George and I'm going to be your Nexus manager. For the next 24 hours or so, this ticket is going to be open and it's gonna be your personal helpline. Feel free to ask any questions, queries, or anything else you may want to ask while you are new to the city!"""
 
 def build_stats_message():
     gems = ticket_count * 10
@@ -213,13 +213,13 @@ async def on_message(message):
 
     if content == "clear" and message.author.id == OWNER_ID:
         channel = message.channel
-        for msg_id in welcome_message_ids:
+        for msg_id in list(welcome_message_ids):
             try:
                 msg = await channel.fetch_message(msg_id)
                 await msg.delete()
+                welcome_message_ids.remove(msg_id)
             except:
                 continue
-        welcome_message_ids = []
         last_message_id = None
         save_stats()
         await message.delete()
@@ -232,20 +232,20 @@ async def on_message(message):
         save_stats()
 
         channel = message.channel
-        if len(current_group) <= 3:
-            content = build_welcome_message(current_group)
-            if last_message_id:
-                try:
-                    last_msg = await channel.fetch_message(last_message_id)
-                    await last_msg.edit(content=content)
-                except:
-                    last_msg = await channel.send(content)
-                    last_message_id = last_msg.id
-                    welcome_message_ids.append(last_message_id)
-            else:
+        content = build_welcome_message(current_group)
+
+        if last_message_id:
+            try:
+                last_msg = await channel.fetch_message(last_message_id)
+                await last_msg.edit(content=content)
+            except:
                 new_msg = await channel.send(content)
                 last_message_id = new_msg.id
                 welcome_message_ids.append(last_message_id)
+        else:
+            new_msg = await channel.send(content)
+            last_message_id = new_msg.id
+            welcome_message_ids.append(last_message_id)
 
         if len(current_group) == 3:
             ticket_count += 1
